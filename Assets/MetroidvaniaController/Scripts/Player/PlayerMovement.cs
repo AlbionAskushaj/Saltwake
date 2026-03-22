@@ -26,7 +26,6 @@ public class PlayerMovement : MonoBehaviour {
 		{
 			jump = true;
 		}
-
 		if (Input.GetKeyDown(KeyCode.C))
 		{
 			dash = true;

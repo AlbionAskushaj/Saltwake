@@ -1,56 +1,98 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-	public float FollowSpeed = 2f;
-	public Transform Target;
+    [Header("Follow")]
+    public Transform Target;
+    public float FollowSpeed = 8f;
+    public float RoomTransitionSpeed = 5f; // Slower pan when switching rooms
 
-	// Transform of the camera to shake. Grabs the gameObject's transform
-	// if null.
-	private Transform camTransform;
+    [Header("Shake")]
+    public float shakeAmount = 0.1f;
+    public float decreaseFactor = 1.0f;
 
-	// How long the object should shake for.
-	public float shakeDuration = 0f;
+    private Camera cam;
+    private Vector3 targetPos;
+    private bool hasBounds = false;
+    private Bounds roomBounds;
+    private bool isTransitioning = false;
 
-	// Amplitude of the shake. A larger value shakes the camera harder.
-	public float shakeAmount = 0.1f;
-	public float decreaseFactor = 1.0f;
+    // Shake state
+    private float shakeDuration = 0f;
+    private Vector3 shakeOffset = Vector3.zero;
 
-	Vector3 originalPos;
+    void Awake()
+    {
+        cam = GetComponent<Camera>();
+        Cursor.visible = false;
+    }
 
-	void Awake()
-	{
-		Cursor.visible = false;
-		if (camTransform == null)
-		{
-			camTransform = GetComponent(typeof(Transform)) as Transform;
-		}
-	}
+    void LateUpdate()
+    {
+        if (Target == null) return;
 
-	void OnEnable()
-	{
-		originalPos = camTransform.localPosition;
-	}
+        Vector3 desired = new Vector3(Target.position.x, Target.position.y, -10f);
 
-	private void Update()
-	{
-		Vector3 newPosition = Target.position;
-		newPosition.z = -10;
-		transform.position = Vector3.Slerp(transform.position, newPosition, FollowSpeed * Time.deltaTime);
+        if (hasBounds)
+            desired = ClampToBounds(desired);
 
-		if (shakeDuration > 0)
-		{
-			camTransform.localPosition = originalPos + Random.insideUnitSphere * shakeAmount;
+        float speed = isTransitioning ? RoomTransitionSpeed : FollowSpeed;
+        targetPos = Vector3.Lerp(transform.position, desired, speed * Time.deltaTime);
+        targetPos.z = -10f;
 
-			shakeDuration -= Time.deltaTime * decreaseFactor;
-		}
-	}
+        // Check if we've arrived at the new room position
+        if (isTransitioning && Vector3.Distance(targetPos, desired) < 0.05f)
+            isTransitioning = false;
 
-	public void ShakeCamera()
-	{
-		originalPos = camTransform.localPosition;
-		shakeDuration = 0.2f;
-	}
+        // Apply shake on top
+        UpdateShake();
+        transform.position = targetPos + shakeOffset;
+    }
+
+    // Called by CameraRoom when the player enters a new room
+    public void SetRoomBounds(Bounds bounds)
+    {
+        roomBounds = bounds;
+        hasBounds = true;
+        isTransitioning = true;
+    }
+
+    // Clamp the camera position so it never shows outside the room
+    private Vector3 ClampToBounds(Vector3 pos)
+    {
+        float halfH = cam.orthographicSize;
+        float halfW = halfH * cam.aspect;
+
+        // If the room is smaller than the camera view, center on the room axis
+        float minX = roomBounds.min.x + halfW;
+        float maxX = roomBounds.max.x - halfW;
+        float minY = roomBounds.min.y + halfH;
+        float maxY = roomBounds.max.y - halfH;
+
+        pos.x = (minX > maxX) ? roomBounds.center.x : Mathf.Clamp(pos.x, minX, maxX);
+        pos.y = (minY > maxY) ? roomBounds.center.y : Mathf.Clamp(pos.y, minY, maxY);
+
+        return pos;
+    }
+
+    private void UpdateShake()
+    {
+        if (shakeDuration > 0)
+        {
+            shakeOffset = Random.insideUnitSphere * shakeAmount;
+            shakeOffset.z = 0f;
+            shakeDuration -= Time.deltaTime * decreaseFactor;
+        }
+        else
+        {
+            shakeOffset = Vector3.zero;
+            shakeDuration = 0f;
+        }
+    }
+
+    public void ShakeCamera()
+    {
+        shakeDuration = 0.2f;
+    }
 }
