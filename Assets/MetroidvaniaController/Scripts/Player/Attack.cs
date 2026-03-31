@@ -17,6 +17,14 @@ public class Attack : MonoBehaviour
 	private void Awake()
 	{
 		m_Rigidbody2D = GetComponent<Rigidbody2D>();
+		if (cam == null)
+		{
+			CameraFollow cameraFollow = Camera.main != null ? Camera.main.GetComponent<CameraFollow>() : FindObjectOfType<CameraFollow>();
+			if (cameraFollow != null)
+			{
+				cam = cameraFollow.gameObject;
+			}
+		}
 	}
 
 	// Start is called before the first frame update
@@ -28,7 +36,7 @@ public class Attack : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		if (Input.GetKeyDown(KeyCode.X) && canAttack)
+		if (Input.GetKeyDown(KeyCode.K) && canAttack)
 		{
 			canAttack = false;
 			animator.SetBool("IsAttacking", true);
@@ -63,7 +71,10 @@ public class Attack : MonoBehaviour
 					dmgValue = -dmgValue;
 				}
 				collidersEnemies[i].gameObject.SendMessage("ApplyDamage", dmgValue);
-				cam.GetComponent<CameraFollow>().ShakeCamera();
+				if (cam != null)
+				{
+					cam.GetComponent<CameraFollow>().ShakeCamera();
+				}
 			}
 		}
 	}

@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour {
 
 	float horizontalMove = 0f;
 	bool jump = false;
+	bool jumpHeld = false;
 	bool dash = false;
 
 	//bool dashAxis = false;
@@ -26,7 +27,8 @@ public class PlayerMovement : MonoBehaviour {
 		{
 			jump = true;
 		}
-		if (Input.GetKeyDown(KeyCode.C))
+		jumpHeld = Input.GetKey(KeyCode.Space);
+		if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
 		{
 			dash = true;
 		}
@@ -60,7 +62,7 @@ public class PlayerMovement : MonoBehaviour {
 	void FixedUpdate ()
 	{
 		// Move our character
-		controller.Move(horizontalMove * Time.fixedDeltaTime, jump, dash);
+		controller.Move(horizontalMove * Time.fixedDeltaTime, jump, jumpHeld, dash);
 		jump = false;
 		dash = false;
 	}
