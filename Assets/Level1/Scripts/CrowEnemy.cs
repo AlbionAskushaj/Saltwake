@@ -21,6 +21,10 @@ public class CrowEnemy : MonoBehaviour
     [SerializeField] private float steeringStrength = 8f;
     [SerializeField] private float hoverAmount = 0.35f;
 
+    [Header("Drops")]
+    [SerializeField] private GameObject heartPickupPrefab;
+    [SerializeField] [Range(0f, 1f)] private float dropChance = 0.2f;
+
     [Header("Detection")]
     [SerializeField] private LayerMask obstacleMask = 1;
     [SerializeField] private Transform player;
@@ -227,6 +231,11 @@ public class CrowEnemy : MonoBehaviour
         if (collider2D != null)
         {
             collider2D.enabled = false;
+        }
+
+        if (heartPickupPrefab != null && Random.value <= dropChance)
+        {
+            Instantiate(heartPickupPrefab, transform.position, Quaternion.identity);
         }
 
         yield return null;

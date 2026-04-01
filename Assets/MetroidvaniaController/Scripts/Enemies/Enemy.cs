@@ -16,7 +16,13 @@ public class Enemy : MonoBehaviour {
 	public float speed = 5f;
 
 	public bool isInvincible = false;
+
+	[Header("Drops")]
+	public GameObject heartPickupPrefab;
+	[Range(0f, 1f)] public float dropChance = 0.2f;
+
 	private bool isHitted = false;
+	private bool isDying = false;
 
 	void Awake () {
 		fallCheck = transform.Find("FallCheck");
@@ -27,7 +33,8 @@ public class Enemy : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 
-		if (life <= 0) {
+		if (life <= 0 && !isDying) {
+			isDying = true;
 			transform.GetComponent<Animator>().SetBool("IsDead", true);
 			StartCoroutine(DestroyEnemy());
 		}
@@ -68,7 +75,7 @@ public class Enemy : MonoBehaviour {
 	public void ApplyDamage(float damage) {
 		if (!isInvincible) 
 		{
-			float direction = damage / Mathf.Abs(damage);
+			float direction = Mathf.Sign(damage);
 			damage = Mathf.Abs(damage);
 			transform.GetComponent<Animator>().SetBool("Hit", true);
 			life -= damage;
@@ -103,6 +110,12 @@ public class Enemy : MonoBehaviour {
 		capsule.direction = CapsuleDirection2D.Horizontal;
 		yield return new WaitForSeconds(0.25f);
 		rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+
+		if (heartPickupPrefab != null && Random.value <= dropChance)
+		{
+			Instantiate(heartPickupPrefab, transform.position, Quaternion.identity);
+		}
+
 		yield return new WaitForSeconds(3f);
 		Destroy(gameObject);
 	}

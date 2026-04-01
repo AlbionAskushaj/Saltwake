@@ -27,8 +27,16 @@ Assets/
 │   └── Scenes/                   # Demo scene
 ├── Level1/                       # Level 1 scene, scripts, and assets
 │   ├── Level1.unity
-│   ├── Scripts/                  # CrowEnemy.cs, level-specific scripts
-│   └── Enemies/                  # Crow.prefab
+│   ├── Scripts/                  # All Level 1 scripts:
+│   │   ├── CrowEnemy.cs          # Flying enemy AI
+│   │   ├── CrowBoss.cs           # 3-phase boss AI
+│   │   ├── RoomManager.cs        # Enemy tracking, gate control, rewards
+│   │   ├── RoomGate.cs           # Barrier with open/close + fade
+│   │   ├── Pickup.cs             # Collectible pickups (heart, buffs)
+│   │   ├── BuffManager.cs        # Temporary damage/speed buffs
+│   │   ├── DialogueBox.cs        # Styled typewriter text box UI
+│   │   └── BossHealthBar.cs      # Boss HP bar UI
+│   └── Enemies/                  # Crow.prefab, CrowBoss.prefab
 ├── Level2/                       # Level 2 scene and assets
 │   └── Level2.unity
 ├── HealthHeartSystem/            # Heart-based health UI
@@ -45,9 +53,19 @@ Assets/
 - `PlayerStats.cs` — singleton health manager with Heal(), TakeDamage(), AddHealth()
 
 ### Enemies
-- `Enemy.cs` — ground patrol, 10 HP, auto-flip at walls/edges, 2 contact damage
-- `CrowEnemy.cs` — flying enemy, 8 HP, vision-based pursuit (8 unit range), hover + steering AI
+- `Enemy.cs` — ground patrol, 10 HP, auto-flip at walls/edges, 2 contact damage, 20% heart drop on death
+- `CrowEnemy.cs` — flying enemy, 8 HP, vision-based pursuit (8 unit range), hover + steering AI, 20% heart drop on death
+- `CrowBoss.cs` — Level 1 boss, 40 HP, 3-phase AI (circling, summoning, frenzy), spawns minion crows
 - `Ally.cs` — companion NPC with decision-tree AI, melee + ranged attacks
+
+### Room Progression
+- `RoomManager.cs` — tracks enemies per room, seals gates on entry, opens on clear, spawns rewards
+- `RoomGate.cs` — solid barrier with open/close and fade animation
+- Rooms are gated: kill all enemies to unlock the exit
+
+### Pickups & Buffs
+- `Pickup.cs` — collectible with types: Heart (2 HP heal), DamageBuff, SpeedBuff, FullHeal
+- `BuffManager.cs` — on player, manages temporary damage (1.5x for 15s) and speed (1.5x for 15s) buffs
 
 ### Camera
 - `CameraFollow.cs` — smooth follow (8 u/s), room-based bounds clamping via CameraRoom triggers, camera shake on attacks
@@ -57,8 +75,12 @@ Assets/
 - 2 HP per heart, max expandable via PlayerStats.MaxTotalHealth
 
 ### Dialogue
-- `DialogueOnlyTrigger.cs` — trigger-based text display, configurable duration, one-time option
+- `DialogueBox.cs` — singleton UI with typewriter effect, fade in/out, called via `DialogueBox.Show(message, duration)`
+- `DialogueOnlyTrigger.cs` — trigger-based, calls DialogueBox.Show(), configurable duration, one-time option
 - `RevealBlocksAndDialogueTrigger.cs` — reveals hidden objects + paired dialogue
+
+### Boss UI
+- `BossHealthBar.cs` — singleton UI with slider, called via `BossHealthBar.Show/UpdateHealth/Hide`
 
 ### Environment
 - `CameraRoom.cs` — BoxCollider2D trigger, passes bounds to CameraFollow on player entry
@@ -74,14 +96,15 @@ Assets/
 - Tags used: "Player", "Enemy", "DrawCharacter" (for ally targeting)
 - Prefabs stored in `MetroidvaniaController/Prefabs/` or level-specific folders
 - Level-specific scripts go in `Level{N}/Scripts/`
-- Singletons used for global state (PlayerStats)
+- Singletons used for global state (PlayerStats, DialogueBox, BossHealthBar)
 
 ## Level Design
 
 - Levels are Unity scenes (`Level1/Level1.unity`, `Level2/Level2.unity`)
 - Each level is divided into rooms defined by `CameraRoom` BoxCollider2D triggers
 - Room transitions happen when the player walks into the next room's trigger
-- Level transitions use `SceneManager.LoadSceneAsync()` via build index
+- Rooms are gated via RoomManager + RoomGate — enemies must be cleared to progress
+- Level transitions use `SceneManager.LoadSceneAsync()` via build index (triggered by RoomManager on boss room clear)
 - Respawn checkpoints use `PlayerRespawn.cs` with designated Transform references
 
 ## Build & Run

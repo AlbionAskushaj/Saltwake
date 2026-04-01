@@ -1,13 +1,7 @@
 using UnityEngine;
-using TMPro;
-using System.Collections;
 
 public class DialogueOnlyTrigger : MonoBehaviour
 {
-    [Header("Dialogue UI")]
-    [SerializeField] private GameObject dialogueBox;
-    [SerializeField] private TextMeshProUGUI dialogueText;
-
     [Header("Message")]
     [TextArea(2, 5)]
     [SerializeField] private string message = "Default dialogue message.";
@@ -24,16 +18,6 @@ public class DialogueOnlyTrigger : MonoBehaviour
         if (triggerOnlyOnce && hasTriggered) return;
 
         hasTriggered = true;
-        StartCoroutine(ShowDialogue());
-    }
-
-    private IEnumerator ShowDialogue()
-    {
-        dialogueBox.SetActive(true);
-        dialogueText.text = message;
-
-        yield return new WaitForSeconds(displayTime);
-
-        dialogueBox.SetActive(false);
+        DialogueBox.Show(message, displayTime);
     }
 }
