@@ -293,6 +293,8 @@ public class CharacterController2D : MonoBehaviour
 
 			animator.SetBool("Hit", true);
 			life -= damage;
+			if (PlayerStats.Instance != null)
+				PlayerStats.Instance.TakeDamage(damage);
 			Vector2 damageDir = Vector3.Normalize(transform.position - position) * 40f;
 			m_Rigidbody2D.linearVelocity = Vector2.zero;
 			m_Rigidbody2D.AddForce(damageDir * 10);

@@ -8,10 +8,18 @@ public class ThrowableWeapon : MonoBehaviour
 	public bool hasHit = false;
 	public float speed = 10f;
 
-    // Start is called before the first frame update
     void Start()
     {
-        
+        Collider2D myCollider = GetComponent<Collider2D>();
+        if (myCollider != null)
+        {
+            foreach (GameObject cloud in GameObject.FindGameObjectsWithTag("Cloud"))
+            {
+                Collider2D cloudCollider = cloud.GetComponent<Collider2D>();
+                if (cloudCollider != null)
+                    Physics2D.IgnoreCollision(myCollider, cloudCollider);
+            }
+        }
     }
 
     // Update is called once per frame
@@ -28,7 +36,7 @@ public class ThrowableWeapon : MonoBehaviour
 			collision.gameObject.SendMessage("ApplyDamage", Mathf.Sign(direction.x) * 2f);
 			Destroy(gameObject);
 		}
-		else if (collision.gameObject.tag != "Player")
+		else if (collision.gameObject.tag != "Player" && collision.gameObject.tag != "Cloud")
 		{
 			Destroy(gameObject);
 		}
