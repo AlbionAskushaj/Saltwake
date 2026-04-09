@@ -29,6 +29,14 @@ public class RoomManager : MonoBehaviour
     [Tooltip("Scene transform where the boss death reward spawns. Brinewyrm only.")]
     [SerializeField] private Transform bossRewardSpawnPoint;
 
+    [Header("Dialogue")]
+    [TextArea(2, 5)]
+    [SerializeField] private string roomEntryDialogue = "";
+    [SerializeField] private float entryDialogueDuration = 3f;
+    [TextArea(2, 5)]
+    [SerializeField] private string roomClearDialogue = "";
+    [SerializeField] private float clearDialogueDuration = 3f;
+
     [Header("Level Transition")]
     [SerializeField] private bool loadNextLevelOnClear = false;
     [SerializeField] private int nextLevelBuildIndex = -1;
@@ -91,12 +99,18 @@ public class RoomManager : MonoBehaviour
 
             // Brinewyrm needs scene-only references (surface points, tide hazard, reward
             // spawn) injected after instantiation since prefabs can't store scene refs.
+            DialogueBox.Show("The Stormcrow descends...", 3f);
+
             BrinewyrmBoss brinewyrm = spawnedBoss.GetComponent<BrinewyrmBoss>();
             if (brinewyrm != null)
             {
                 brinewyrm.SetRoomManager(this);
                 brinewyrm.Initialize(bossSurfacePoints, bossTideHazard, bossRewardSpawnPoint);
             }
+        }
+        else if (!string.IsNullOrEmpty(roomEntryDialogue))
+        {
+            DialogueBox.Show(roomEntryDialogue, entryDialogueDuration);
         }
     }
 
@@ -123,6 +137,9 @@ public class RoomManager : MonoBehaviour
 
         if (entranceGate != null)
             entranceGate.Open();
+
+        if (!string.IsNullOrEmpty(roomClearDialogue))
+            DialogueBox.Show(roomClearDialogue, clearDialogueDuration);
 
         if (clearRewardPrefab != null && rewardSpawnPoint != null)
         {

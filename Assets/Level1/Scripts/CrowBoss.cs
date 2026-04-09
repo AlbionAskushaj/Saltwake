@@ -321,6 +321,8 @@ public class CrowBoss : MonoBehaviour
             yield return null;
         }
 
+        DialogueBox.Show("The Stormcrow has fallen.", 3f);
+
         if (fullHealPickupPrefab != null)
         {
             Vector3 spawnPos = rewardSpawnPoint != null ? rewardSpawnPoint.position : transform.position;

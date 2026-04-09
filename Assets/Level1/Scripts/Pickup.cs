@@ -34,13 +34,19 @@ public class Pickup : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
+        CharacterController2D controller = other.GetComponent<CharacterController2D>();
+
         switch (pickupType)
         {
             case PickupType.Heart:
                 PlayerStats.Instance.Heal(healAmount);
+                if (controller != null)
+                    controller.life = Mathf.Min(controller.life + healAmount, controller.maxLife);
                 break;
             case PickupType.FullHeal:
                 PlayerStats.Instance.Heal(PlayerStats.Instance.MaxHealth);
+                if (controller != null)
+                    controller.life = controller.maxLife;
                 break;
             case PickupType.DamageBuff:
                 BuffManager buffMgr = other.GetComponent<BuffManager>();
