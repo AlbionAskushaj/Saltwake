@@ -115,15 +115,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 742f1669efbeb2e40856f384aee00be9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_DrawMode: 1
+  m_Size: {x: 1.5, y: 1.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!61 &3064578522231833511
 BoxCollider2D:
@@ -187,10 +187,12 @@ MonoBehaviour:
   hitRecoveryTime: 0.1
   brineProjectilePrefab: {fileID: 4574306689609869708, guid: e3cdaf51bbb2d4fcbb14968e80121abd, type: 3}
   muzzle: {fileID: 7713348682001815604}
-  fireInterval: 2
+  fireInterval: 2.5
   arcHeightBias: 4
-  maxRange: 12
-  minRange: 2
+  maxRange: 18
+  minRange: 1
+  contactDamage: 1
+  touchDamageCooldown: 0.8
   heartPickupPrefab: {fileID: 1000013667988280, guid: 677e3f20f0ab76a45bd59d5b73b0b446, type: 3}
   dropChance: 0.25
   spriteRenderer: {fileID: 5640836844701659999}

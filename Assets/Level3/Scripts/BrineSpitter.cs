@@ -65,21 +65,8 @@ public class BrineSpitter : MonoBehaviour
     private void Fire()
     {
         if (brineProjectilePrefab == null) return;
-
-        Vector3 origin = muzzle != null ? muzzle.position : transform.position;
-        Vector2 toPlayer = (Vector2)player.position - (Vector2)origin;
-
-        // Solve a simple lobbed velocity: horizontal speed proportional to distance,
-        // vertical bumped up by arcHeightBias so it actually arcs.
-        float horizontalTime = Mathf.Clamp(Mathf.Abs(toPlayer.x) / 6f, 0.4f, 1.4f);
-        float vx = toPlayer.x / horizontalTime;
-        // y = vy*t + 0.5*g*t^2  (g is negative; rb gravity scale = 1.5 so g = -14.7)
-        float g = Physics2D.gravity.y * 1.5f;
-        float vy = (toPlayer.y - 0.5f * g * horizontalTime * horizontalTime) / horizontalTime + arcHeightBias;
-
-        GameObject proj = Instantiate(brineProjectilePrefab, origin, Quaternion.identity);
-        BrineProjectile bp = proj.GetComponent<BrineProjectile>();
-        if (bp != null) bp.Launch(new Vector2(vx, vy));
+        // Just spawn it — the projectile finds and chases the player on its own
+        Instantiate(brineProjectilePrefab, transform.position, Quaternion.identity);
     }
 
     public void ApplyDamage(float damage)
@@ -88,6 +75,16 @@ public class BrineSpitter : MonoBehaviour
         life -= Mathf.Abs(damage);
         hitRecoverTimer = hitRecoveryTime;
         if (life <= 0f) StartCoroutine(Die());
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision) => TryDamagePlayer(collision.collider);
+    private void OnCollisionStay2D(Collision2D collision) => TryDamagePlayer(collision.collider);
+
+    private void TryDamagePlayer(Collider2D other)
+    {
+        if (isDying || !other.CompareTag("Player")) return;
+        CharacterController2D controller = other.GetComponent<CharacterController2D>();
+        if (controller != null) controller.ApplyDamage(2f, transform.position);
     }
 
     private IEnumerator Die()

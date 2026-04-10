@@ -109,6 +109,13 @@ public class JellyfishDrifter : MonoBehaviour
         isPulseActive = false;
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (isDying || !collision.collider.CompareTag("Player")) return;
+        CharacterController2D controller = collision.collider.GetComponent<CharacterController2D>();
+        if (controller != null) controller.ApplyDamage(pulseDamage, transform.position);
+    }
+
     public void ApplyDamage(float damage)
     {
         if (isDying || Mathf.Approximately(damage, 0f)) return;

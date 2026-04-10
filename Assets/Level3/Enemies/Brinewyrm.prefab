@@ -84,15 +84,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: fbb7516acfb66364f9a8c8df6641077d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_DrawMode: 1
+  m_Size: {x: 4, y: 4}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!50 &987324602670085770
 Rigidbody2D:
@@ -203,5 +203,5 @@ MonoBehaviour:
     wheel, my hands, a name I can almost hear."
   deathDialogueDuration: 6
   spriteRenderer: {fileID: 2334412376189499074}
-  idleColor: {r: 0.4, g: 0.7, b: 0.9, a: 1}
-  telegraphColor: {r: 1, g: 0, b: 0, a: 1}
+  idleColor: {r: 1, g: 1, b: 1, a: 1}
+  telegraphColor: {r: 1, g: 0.3, b: 0.3, a: 1}

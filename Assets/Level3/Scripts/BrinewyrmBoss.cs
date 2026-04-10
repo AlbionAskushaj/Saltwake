@@ -231,18 +231,11 @@ public class BrinewyrmBoss : MonoBehaviour
     private void SpitFan()
     {
         if (brineProjectilePrefab == null || player == null) return;
-        Vector2 origin = transform.position;
-        Vector2 toPlayer = ((Vector2)player.position - origin).normalized;
-        float baseAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
-
+        // Spawn multiple homing projectiles — they find the player on their own
         for (int i = 0; i < spitFanCount; i++)
         {
-            float offset = (i - (spitFanCount - 1) * 0.5f) * (spitArcSpread / Mathf.Max(1, spitFanCount - 1));
-            float angle = (baseAngle + offset) * Mathf.Deg2Rad;
-            Vector2 vel = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spitSpeed;
-            GameObject proj = Instantiate(brineProjectilePrefab, origin, Quaternion.identity);
-            BrineProjectile bp = proj.GetComponent<BrineProjectile>();
-            if (bp != null) bp.Launch(vel);
+            Vector3 offset = new Vector3(Random.Range(-2f, 2f), Random.Range(-1f, 1f), 0f);
+            Instantiate(brineProjectilePrefab, transform.position + offset, Quaternion.identity);
         }
     }
 
