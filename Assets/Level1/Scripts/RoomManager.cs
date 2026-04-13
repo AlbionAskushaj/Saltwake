@@ -20,6 +20,8 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private bool isBossRoom = false;
     [SerializeField] private GameObject bossPrefab;
     [SerializeField] private Transform bossSpawnPoint;
+    [Tooltip("If true, boss is instantiated at scene Start instead of when the player enters.")]
+    [SerializeField] private bool spawnBossOnStart = false;
 
     [Header("Boss Scene References (Brinewyrm)")]
     [Tooltip("Scene transforms the boss surfaces from. Brinewyrm only.")]
@@ -61,6 +63,30 @@ public class RoomManager : MonoBehaviour
         {
             roomCleared = true;
         }
+
+        if (isBossRoom && spawnBossOnStart && bossPrefab != null && spawnedBoss == null)
+        {
+            SpawnBoss();
+        }
+    }
+
+    private void SpawnBoss()
+    {
+        Vector3 spawnPos = bossSpawnPoint != null ? bossSpawnPoint.position : transform.position;
+        spawnedBoss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
+        bossSpawned = true;
+        enemies.Add(spawnedBoss);
+
+        CrowBoss bossComponent = spawnedBoss.GetComponent<CrowBoss>();
+        if (bossComponent != null)
+            bossComponent.SetRoomManager(this);
+
+        BrinewyrmBoss brinewyrm = spawnedBoss.GetComponent<BrinewyrmBoss>();
+        if (brinewyrm != null)
+        {
+            brinewyrm.SetRoomManager(this);
+            brinewyrm.Initialize(bossSurfacePoints, bossTideHazard, bossRewardSpawnPoint);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -88,25 +114,12 @@ public class RoomManager : MonoBehaviour
 
         if (isBossRoom && bossPrefab != null && spawnedBoss == null)
         {
-            Vector3 spawnPos = bossSpawnPoint != null ? bossSpawnPoint.position : transform.position;
-            spawnedBoss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
-            bossSpawned = true;
-            enemies.Add(spawnedBoss);
-
-            CrowBoss bossComponent = spawnedBoss.GetComponent<CrowBoss>();
-            if (bossComponent != null)
-                bossComponent.SetRoomManager(this);
-
-            // Brinewyrm needs scene-only references (surface points, tide hazard, reward
-            // spawn) injected after instantiation since prefabs can't store scene refs.
+            SpawnBoss();
             DialogueBox.Show("The Stormcrow descends...", 3f);
-
-            BrinewyrmBoss brinewyrm = spawnedBoss.GetComponent<BrinewyrmBoss>();
-            if (brinewyrm != null)
-            {
-                brinewyrm.SetRoomManager(this);
-                brinewyrm.Initialize(bossSurfacePoints, bossTideHazard, bossRewardSpawnPoint);
-            }
+        }
+        else if (isBossRoom && spawnedBoss != null)
+        {
+            DialogueBox.Show("The Stormcrow descends...", 3f);
         }
         else if (!string.IsNullOrEmpty(roomEntryDialogue))
         {

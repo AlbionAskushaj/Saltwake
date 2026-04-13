@@ -346,6 +346,22 @@ public class CharacterController2D : MonoBehaviour
 		yield return new WaitForSeconds(0.4f);
 		m_Rigidbody2D.linearVelocity = new Vector2(0, m_Rigidbody2D.linearVelocity.y);
 		yield return new WaitForSeconds(1.1f);
-		SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
+
+		PlayerRespawn respawn = GetComponent<PlayerRespawn>();
+		if (respawn != null && respawn.GetRespawnPoint() != null)
+		{
+			respawn.Respawn();
+			animator.SetBool("IsDead", false);
+			canMove = true;
+			GetComponent<Attack>().enabled = true;
+			life = (int)maxLife;
+			if (PlayerStats.Instance != null)
+				PlayerStats.Instance.Heal(PlayerStats.Instance.MaxTotalHealth);
+			StartCoroutine(MakeInvincible(1f));
+		}
+		else
+		{
+			SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
+		}
 	}
 }
