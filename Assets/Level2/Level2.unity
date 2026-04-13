@@ -2550,7 +2550,7 @@ MonoBehaviour:
   - {fileID: 958865375}
   currentWaveNumber: 0
   bossPrefab: {fileID: 990664307468291552, guid: aad0bd4a879a54e13833b1cd45a37ee8, type: 3}
-  nextLevelBuildIndex: -1
+  nextLevelBuildIndex: 2
   waveText: {fileID: 524723526}
 --- !u!4 &1742127269
 Transform:

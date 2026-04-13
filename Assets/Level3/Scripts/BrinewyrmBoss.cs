@@ -55,6 +55,12 @@ public class BrinewyrmBoss : MonoBehaviour
     private RoomManager roomManager;
     private List<GameObject> spawnedMinions = new List<GameObject>();
 
+    // Arena bounds derived from surface points at Start
+    private float arenaMinX;
+    private float arenaMaxX;
+    private float arenaMinY;
+    private float arenaMaxY;
+
     private const float PHASE2_THRESHOLD = 0.65f;
     private const float PHASE3_THRESHOLD = 0.30f;
 
@@ -87,6 +93,23 @@ public class BrinewyrmBoss : MonoBehaviour
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) player = p.transform;
+
+        // Derive arena bounds from the surface points so the boss
+        // knows where it can surface when chasing the player.
+        if (surfacePoints != null && surfacePoints.Length > 0)
+        {
+            arenaMinX = float.MaxValue;
+            arenaMaxX = float.MinValue;
+            foreach (Transform sp in surfacePoints)
+            {
+                if (sp == null) continue;
+                if (sp.position.x < arenaMinX) arenaMinX = sp.position.x;
+                if (sp.position.x > arenaMaxX) arenaMaxX = sp.position.x;
+            }
+        }
+        // Vertical range: floor surface points up to the top platforms
+        arenaMinY = -5.5f;
+        arenaMaxY = 4f;
 
         BossHealthBar.Show("The Brinewyrm", maxHealth);
         StartCoroutine(BossLoop());
@@ -164,25 +187,20 @@ public class BrinewyrmBoss : MonoBehaviour
 
     private IEnumerator SurfaceAttack(float telegraphTime)
     {
-        if (surfacePoints == null || surfacePoints.Length == 0) yield break;
+        if (player == null) yield break;
 
-        // Pick the surface point closest to the player so the fight stays engaging
-        Transform target = surfacePoints[0];
-        float bestDist = float.MaxValue;
-        if (player != null)
-        {
-            foreach (Transform sp in surfacePoints)
-            {
-                if (sp == null) continue;
-                float d = Mathf.Abs(sp.position.x - player.position.x);
-                if (d < bestDist) { bestDist = d; target = sp; }
-            }
-        }
+        // Surface near the player's current position so the boss
+        // follows them across the whole room — floor or platforms.
+        float offsetX = Random.Range(-2.5f, 2.5f);
+        float targetX = Mathf.Clamp(player.position.x + offsetX, arenaMinX, arenaMaxX);
+        float targetY = Mathf.Clamp(player.position.y - 0.5f, arenaMinY, arenaMaxY);
 
-        // Move to the surface point underground (still hidden)
-        transform.position = target.position + Vector3.down * 4f;
+        Vector3 surfacePos = new Vector3(targetX, targetY, 0f);
 
-        // Telegraph at the surface point
+        // Move underground (hidden, below the surface point)
+        transform.position = surfacePos + Vector3.down * 4f;
+
+        // Telegraph — red flash warns the player where the boss is about to burst out
         float t = 0f;
         while (t < telegraphTime)
         {
@@ -194,7 +212,7 @@ public class BrinewyrmBoss : MonoBehaviour
         if (spriteRenderer != null) spriteRenderer.color = idleColor;
 
         // Burst up — vulnerable window
-        SetExposed(target.position);
+        SetExposed(surfacePos);
         isVulnerable = true;
 
         yield return new WaitForSeconds(surfacedDuration);
@@ -314,6 +332,10 @@ public class BrinewyrmBoss : MonoBehaviour
         // place to grant the actual fragment.
         if (!string.IsNullOrEmpty(deathDialogue))
             DialogueBox.Show(deathDialogue, deathDialogueDuration);
+
+        // Wait for the dialogue to finish, then show the victory screen
+        yield return new WaitForSeconds(deathDialogueDuration + 1f);
+        VictoryScreen.Show();
 
         Destroy(gameObject);
     }
