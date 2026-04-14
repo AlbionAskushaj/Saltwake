@@ -131,8 +131,6 @@ MonoBehaviour:
   bossMinShootInterval: 0.5
   bossMaxShootInterval: 1.5
   isBoss: 0
-  Coin: {fileID: 521765184447325252, guid: db31ad3a3b2694fd8b4654a11a38bd3b, type: 3}
-  ExpOrb: {fileID: 3957199662375456283, guid: bfad4dba24e704d1e90afd5415a78af1, type: 3}
   health: 15
   shakeDuration: 5
   shakeMagnitude: 0.5

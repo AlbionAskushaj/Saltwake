@@ -23,6 +23,17 @@ public class HealthUI : MonoBehaviour
     [Header("Settings")]
     public float hpPerHeart = 2f;
 
+    void Awake()
+    {
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null)
+        {
+            CharacterController2D cc = p.GetComponent<CharacterController2D>();
+            if (cc != null)
+                player = cc;
+        }
+    }
+
     void Update()
     {
         RefreshHearts();
@@ -30,6 +41,15 @@ public class HealthUI : MonoBehaviour
 
     void RefreshHearts()
     {
+        if (player == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null)
+                player = p.GetComponent<CharacterController2D>();
+        }
+        if (player == null || hearts == null)
+            return;
+
         for (int i = 0; i < hearts.Length; i++)
         {
             // How much HP is needed to fill this heart fully

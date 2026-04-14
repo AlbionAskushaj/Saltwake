@@ -168,6 +168,7 @@ public class RoomManager : MonoBehaviour
     private IEnumerator LoadNextLevel()
     {
         yield return new WaitForSeconds(3f);
+        Level2Progress.ClearResumeWave();
         SceneManager.LoadSceneAsync(nextLevelBuildIndex);
     }
 

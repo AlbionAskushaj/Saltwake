@@ -215,6 +215,18 @@ public class CharacterController2D : MonoBehaviour
 			particleJumpUp.Play();
 		}
 
+		// --- AIR JUMP (infinite mid-air) — works when not on valid ground/coyote (e.g. Level 2 clouds off mask)
+		else if (!isWallSliding && jumpBufferCounter > 0 && !m_Grounded && coyoteTimeCounter <= 0f)
+		{
+			jumpBufferCounter = 0;
+			m_Rigidbody2D.linearVelocity = new Vector2(m_Rigidbody2D.linearVelocity.x, m_JumpSpeed);
+
+			animator.SetBool("IsJumping", true);
+			animator.SetBool("JumpUp", true);
+			particleJumpDown.Play();
+			particleJumpUp.Play();
+		}
+
 		// --- WALL SLIDE VELOCITY ---
 		if (isWallSliding)
 		{
@@ -284,7 +296,7 @@ public class CharacterController2D : MonoBehaviour
 		transform.localScale = theScale;
 	}
 
-	public void ApplyDamage(float damage, Vector3 position)
+	public void ApplyDamage(float damage, Vector3 position, bool applyKnockback = true)
 	{
 		if (!invincible)
 		{
@@ -295,9 +307,12 @@ public class CharacterController2D : MonoBehaviour
 			life -= damage;
 			if (PlayerStats.Instance != null)
 				PlayerStats.Instance.TakeDamage(damage);
-			Vector2 damageDir = Vector3.Normalize(transform.position - position) * 40f;
-			m_Rigidbody2D.linearVelocity = Vector2.zero;
-			m_Rigidbody2D.AddForce(damageDir * 10);
+			if (applyKnockback)
+			{
+				Vector2 damageDir = Vector3.Normalize(transform.position - position) * 40f;
+				m_Rigidbody2D.linearVelocity = Vector2.zero;
+				m_Rigidbody2D.AddForce(damageDir * 10);
+			}
 			if (life <= 0)
 			{
 				StartCoroutine(WaitToDead());
@@ -350,6 +365,12 @@ public class CharacterController2D : MonoBehaviour
 		PlayerRespawn respawn = GetComponent<PlayerRespawn>();
 		if (respawn != null && respawn.GetRespawnPoint() != null)
 		{
+			if (WaveManager.instance != null)
+			{
+				Level2Progress.SaveWaveAndReloadScene(WaveManager.instance.currentWaveNumber);
+				yield break;
+			}
+
 			respawn.Respawn();
 			animator.SetBool("IsDead", false);
 			canMove = true;

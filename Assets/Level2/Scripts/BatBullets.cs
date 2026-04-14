@@ -60,7 +60,7 @@ public class BebbleMovement : MonoBehaviour
             CharacterController2D controller = other.GetComponent<CharacterController2D>();
             if (controller != null)
             {
-                controller.ApplyDamage(3f, transform.position);
+                controller.ApplyDamage(3f, transform.position, applyKnockback: false);
             }
             Destroy(gameObject);
         }

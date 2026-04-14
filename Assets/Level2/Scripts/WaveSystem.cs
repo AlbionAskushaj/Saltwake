@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 
 public class WaveManager : MonoBehaviour
@@ -19,13 +18,63 @@ public class WaveManager : MonoBehaviour
     [Header("Level Transition")]
     public int nextLevelBuildIndex = -1;
 
+    [Header("Checkpoints")]
+    [Tooltip("Respawn position when Level 2 loads (before wave 1). Required so deaths stay in this scene.")]
+    [SerializeField] private Transform levelEntryCheckpoint;
+    [Tooltip("Optional per-wave respawn positions; null entries use levelEntryCheckpoint.")]
+    [SerializeField] private Transform[] waveCheckpointTransforms = new Transform[5];
+    [SerializeField] private string[] checkpointMessages = new string[5]
+    {
+        "Checkpoint reached.",
+        "Checkpoint reached.",
+        "Checkpoint reached.",
+        "Checkpoint reached.",
+        "Checkpoint reached."
+    };
+    [SerializeField] private float dialogueDuration = 2f;
 
+    [Header("Flavor dialogue")]
+    [TextArea(2, 4)]
+    [SerializeField] private string entryFlavorLine = "Oh… how'd I get up here?";
+    [SerializeField] private float entryFlavorDelay = 3.5f;
+    [SerializeField] private float entryFlavorHold = 3f;
+
+    [TextArea(2, 4)]
+    [SerializeField] private string wave2FlavorLine = "Oh great, there's more!";
+    [TextArea(2, 4)]
+    [SerializeField] private string wave4FlavorLine = "You've got to be kidding—again?!";
+    [SerializeField] private float waveFollowUpDelay = 3.5f;
+    [SerializeField] private float waveFlavorHold = 3f;
+
+    [TextArea(2, 4)]
+    [SerializeField] private string wave1FirstShotLine = "Whoa—what's that coming at me?!";
+    [TextArea(2, 4)]
+    [SerializeField] private string wave3FirstShotLine = "What?! The bullets are coming right at me!";
+    [SerializeField] private float projectileReactionHold = 3f;
+
+    [TextArea(2, 4)]
+    [SerializeField] private string bossSpawnLine = "Oh no… why is there an angry cloud?!";
+    [SerializeField] private float bossSpawnHold = 3f;
+
+    [TextArea(2, 4)]
+    [SerializeField] private string bossDefeatFirstLine = "Phew, that was scary..";
+    [SerializeField] private float bossDefeatFirstHold = 3f;
+    [SerializeField] private float bossDefeatBetweenLinesDelay = 4.5f;
+    [TextArea(2, 4)]
+    [SerializeField] private string bossDefeatKeyLine = "Oh, it dropped a yellow key, let me grab it!";
+    [SerializeField] private float bossDefeatKeyHold = 3f;
+    [SerializeField] private float bossDefeatLevelLoadDelay = 4f;
+
+    private bool wave1ShotLineDone;
+    private bool wave3ShotLineDone;
 
     // Make currentWaveNumber publicly accessible
     public int CurrentWaveNumber => currentWaveNumber;
 
 
     public TMP_Text waveText; // Add this line
+
+    private PlayerRespawn cachedPlayerRespawn;
 
     private void Awake()
     {
@@ -41,14 +90,152 @@ public class WaveManager : MonoBehaviour
 
     void Start()
     {
-        StartNextWave();
+        int resumeWave = Level2Progress.ConsumeResumeWave();
+        if (resumeWave >= 1 && resumeWave <= 5)
+            StartCoroutine(StartFromResumeWave(resumeWave));
+        else
+        {
+            ApplyEntryRespawnOnly();
+            StartNextWave();
+            if (!string.IsNullOrEmpty(entryFlavorLine))
+                StartCoroutine(ShowEntryFlavorRoutine());
+        }
     }
 
-    public void StartNextWave()
+    IEnumerator ShowEntryFlavorRoutine()
+    {
+        yield return new WaitForSeconds(entryFlavorDelay);
+        DialogueBox.Show(entryFlavorLine, entryFlavorHold);
+    }
+
+    IEnumerator ShowDelayedFlavorLine(string line, float delay, float hold)
+    {
+        if (string.IsNullOrEmpty(line))
+            yield break;
+        yield return new WaitForSeconds(delay);
+        DialogueBox.Show(line, hold);
+    }
+
+    IEnumerator StartFromResumeWave(int resumeWave)
+    {
+        yield return null;
+        yield return null;
+
+        PreApplyCloudSpeedForResume(resumeWave);
+        currentWaveNumber = resumeWave - 1;
+        PositionPlayerAtWaveCheckpoint(resumeWave);
+        StartNextWave(showCheckpointDialogue: false);
+    }
+
+    private void PreApplyCloudSpeedForResume(int targetWave)
+    {
+        if (targetWave < 3)
+            return;
+        int extraIncreases = targetWave - 2;
+        Cloud[] clouds = FindObjectsOfType<Cloud>();
+        for (int i = 0; i < extraIncreases; i++)
+        {
+            foreach (Cloud cloud in clouds)
+                cloud.IncreaseSpeed(0.5f);
+        }
+    }
+
+    private Transform GetCheckpointTransformForWave(int waveNumber)
+    {
+        if (waveNumber < 1 || waveNumber > 5)
+            return null;
+        int idx = waveNumber - 1;
+        Transform t = levelEntryCheckpoint;
+        if (waveCheckpointTransforms != null && idx < waveCheckpointTransforms.Length && waveCheckpointTransforms[idx] != null)
+            t = waveCheckpointTransforms[idx];
+        return t;
+    }
+
+    private void PositionPlayerAtWaveCheckpoint(int waveNumber)
+    {
+        Transform t = GetCheckpointTransformForWave(waveNumber);
+        if (t == null)
+            return;
+        PlayerRespawn pr = GetPlayerRespawn();
+        if (pr == null)
+            return;
+        pr.SetRespawnPoint(t);
+        pr.Respawn();
+    }
+
+    private PlayerRespawn GetPlayerRespawn()
+    {
+        if (cachedPlayerRespawn != null)
+            return cachedPlayerRespawn;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+            return null;
+        cachedPlayerRespawn = player.GetComponent<PlayerRespawn>();
+        return cachedPlayerRespawn;
+    }
+
+    private void ApplyEntryRespawnOnly()
+    {
+        if (levelEntryCheckpoint == null)
+        {
+            Debug.LogWarning("WaveManager: assign levelEntryCheckpoint so the player respawns in Level 2.");
+            return;
+        }
+        PlayerRespawn pr = GetPlayerRespawn();
+        if (pr != null)
+            pr.SetRespawnPoint(levelEntryCheckpoint);
+    }
+
+    private void ApplyCheckpointForWave(int waveNumber, bool showDialogue = true)
+    {
+        if (waveNumber < 1 || waveNumber > 5)
+            return;
+        int idx = waveNumber - 1;
+        Transform t = GetCheckpointTransformForWave(waveNumber);
+        if (t == null)
+            return;
+        PlayerRespawn pr = GetPlayerRespawn();
+        if (pr != null)
+            pr.SetRespawnPoint(t);
+
+        if (!showDialogue)
+            return;
+
+        string msg = "Checkpoint reached.";
+        if (checkpointMessages != null && idx < checkpointMessages.Length && !string.IsNullOrEmpty(checkpointMessages[idx]))
+            msg = checkpointMessages[idx];
+        DialogueBox.Show(msg, dialogueDuration);
+    }
+
+    public void NotifyProjectileSpawned()
+    {
+        if (currentWaveNumber == 1 && !wave1ShotLineDone && !string.IsNullOrEmpty(wave1FirstShotLine))
+        {
+            wave1ShotLineDone = true;
+            DialogueBox.Show(wave1FirstShotLine, projectileReactionHold);
+        }
+        else if (currentWaveNumber == 3 && !wave3ShotLineDone && !string.IsNullOrEmpty(wave3FirstShotLine))
+        {
+            wave3ShotLineDone = true;
+            DialogueBox.Show(wave3FirstShotLine, projectileReactionHold);
+        }
+    }
+
+    public void StartNextWave(bool showCheckpointDialogue = true)
     {
         if (currentWaveNumber < 5) // Check for waves 1 through 5
         {
             currentWaveNumber++;
+
+            ApplyCheckpointForWave(currentWaveNumber, showCheckpointDialogue);
+
+            if (showCheckpointDialogue)
+            {
+                if (currentWaveNumber == 2)
+                    StartCoroutine(ShowDelayedFlavorLine(wave2FlavorLine, waveFollowUpDelay, waveFlavorHold));
+                else if (currentWaveNumber == 4)
+                    StartCoroutine(ShowDelayedFlavorLine(wave4FlavorLine, waveFollowUpDelay, waveFlavorHold));
+            }
 
             // Increase cloud speed starting from Wave 2
             if (currentWaveNumber >= 2)
@@ -135,9 +322,14 @@ public class WaveManager : MonoBehaviour
                 float screenRightEdge = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, 0)).x;
                 bossScript.SetEndPosition(new Vector3(screenRightEdge - bossWidth / 2, bossScript.transform.position.y, bossScript.transform.position.z));
 
+                bossScript.OnDeath += BatDefeated;
+                bossScript.OnDeath += () => bossScript.OnDeath -= BatDefeated;
             }
 
             batsAlive = 1; // Mark the boss as alive for game logic
+
+            if (!string.IsNullOrEmpty(bossSpawnLine))
+                DialogueBox.Show(bossSpawnLine, bossSpawnHold);
         }
         else
         {
@@ -214,13 +406,34 @@ public class WaveManager : MonoBehaviour
         batsAlive--;
         if (batsAlive <= 0 && batsRemainingToSpawn <= 0)
         {
-            StartNextWave();
+            if (currentWaveNumber == 5)
+                StartCoroutine(BossDefeatDialogueThenLoadLevel());
+            else
+                StartNextWave();
+        }
+    }
+
+    IEnumerator BossDefeatDialogueThenLoadLevel()
+    {
+        if (!string.IsNullOrEmpty(bossDefeatFirstLine))
+            DialogueBox.Show(bossDefeatFirstLine, bossDefeatFirstHold);
+        yield return new WaitForSeconds(bossDefeatBetweenLinesDelay);
+
+        if (!string.IsNullOrEmpty(bossDefeatKeyLine))
+            DialogueBox.Show(bossDefeatKeyLine, bossDefeatKeyHold);
+        yield return new WaitForSeconds(bossDefeatLevelLoadDelay);
+
+        if (nextLevelBuildIndex >= 0)
+        {
+            Level2Progress.ClearResumeWave();
+            SceneManager.LoadSceneAsync(nextLevelBuildIndex);
         }
     }
 
     IEnumerator LoadNextLevel()
     {
         yield return new WaitForSeconds(3f);
+        Level2Progress.ClearResumeWave();
         SceneManager.LoadSceneAsync(nextLevelBuildIndex);
     }
 }

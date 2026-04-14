@@ -7,8 +7,14 @@ public class KillZone : MonoBehaviour
 {
     void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.gameObject.tag == "Player")
+        if (col.CompareTag("Player"))
         {
+            if (WaveManager.instance != null)
+            {
+                Level2Progress.SaveWaveAndReloadScene(WaveManager.instance.currentWaveNumber);
+                return;
+            }
+
             SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
         }
         else

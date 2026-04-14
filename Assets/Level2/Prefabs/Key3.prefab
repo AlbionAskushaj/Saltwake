@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: -2457364685418534108}
   - component: {fileID: 6735581618779067308}
   - component: {fileID: 4954163886884472762}
+  - component: {fileID: 7123456789012345670}
   m_Layer: 0
   m_Name: Key3
   m_TagString: Key3
@@ -118,7 +119,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -148,3 +149,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bounceHeight: 0.5
   bounceSpeed: 2
+--- !u!114 &7123456789012345670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2012280631279362087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5d8a9e1f2344b5c9d0e1f2a3b4c5d6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nextLevelBuildIndexOverride: -1

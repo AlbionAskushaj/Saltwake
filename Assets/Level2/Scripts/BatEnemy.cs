@@ -17,12 +17,13 @@ public class BatEnemy : MonoBehaviour
     public delegate void BatDeathDelegate();
     public event BatDeathDelegate OnDeath;
 
-    public GameObject Coin;
-    public GameObject ExpOrb;
     public GameObject Key3;
 
     public float health;
 
+    private float maxHealth;
+    private LineRenderer healthLine;
+    private SpriteRenderer spriteRenderer;
 
     public float shakeDuration = 5.0f; // Duration of the shake effect
     public float shakeMagnitude = 0.5f; // Magnitude of the shake
@@ -55,6 +56,10 @@ public class BatEnemy : MonoBehaviour
         StartCoroutine(ShootBebblesRandomly());
 
         AdjustHealthBasedOnWave();
+
+        maxHealth = Mathf.Max(health, 0.01f);
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        SetupHealthLine();
 
     }
 
@@ -97,6 +102,78 @@ public class BatEnemy : MonoBehaviour
         {
             transform.position = startPosition + Random.insideUnitSphere * shakeMagnitude;
         }
+    }
+
+    void SetupHealthLine()
+    {
+        GameObject lineGo = new GameObject("HealthLine");
+        lineGo.transform.SetParent(transform, false);
+
+        healthLine = lineGo.AddComponent<LineRenderer>();
+        healthLine.useWorldSpace = true;
+        healthLine.positionCount = 2;
+        healthLine.numCapVertices = 0;
+        healthLine.numCornerVertices = 0;
+        healthLine.textureMode = LineTextureMode.Stretch;
+        healthLine.alignment = LineAlignment.TransformZ;
+        healthLine.startWidth = healthLine.endWidth = isBoss ? 0.11f : 0.07f;
+
+        if (spriteRenderer != null)
+        {
+            healthLine.sortingLayerID = spriteRenderer.sortingLayerID;
+            healthLine.sortingOrder = spriteRenderer.sortingOrder + 15;
+        }
+
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null)
+            shader = Shader.Find("Unlit/Color");
+        if (shader != null)
+            healthLine.material = new Material(shader);
+
+        RefreshHealthLine();
+    }
+
+    void LateUpdate()
+    {
+        RefreshHealthLine();
+    }
+
+    void RefreshHealthLine()
+    {
+        if (healthLine == null || maxHealth <= 0f)
+            return;
+
+        SpriteRenderer sr = spriteRenderer != null ? spriteRenderer : GetComponent<SpriteRenderer>();
+        float ratio = Mathf.Clamp01(health / maxHealth);
+
+        float halfTrack;
+        float topY;
+        float centerX;
+        float z;
+
+        if (sr != null)
+        {
+            Bounds b = sr.bounds;
+            halfTrack = Mathf.Max(b.extents.x * 0.9f, 0.12f);
+            topY = b.max.y + 0.08f;
+            centerX = b.center.x;
+            z = b.center.z;
+        }
+        else
+        {
+            halfTrack = Mathf.Max(batWidth * 0.45f, 0.12f);
+            topY = transform.position.y + 0.5f;
+            centerX = transform.position.x;
+            z = transform.position.z;
+        }
+
+        Vector3 left = new Vector3(centerX - halfTrack, topY, z);
+        Vector3 right = new Vector3(centerX - halfTrack + 2f * halfTrack * ratio, topY, z);
+        healthLine.SetPosition(0, left);
+        healthLine.SetPosition(1, right);
+
+        Color c = Color.Lerp(new Color(0.92f, 0.22f, 0.2f), new Color(0.35f, 0.88f, 0.4f), ratio);
+        healthLine.startColor = healthLine.endColor = c;
     }
 
     public void SetEndPosition(Vector3 newPosition)
@@ -149,6 +226,9 @@ public class BatEnemy : MonoBehaviour
             // Check if the bat has been destroyed and stop the coroutine if it has
             if (this == null || gameObject == null) yield break;
 
+            if (!isBoss && WaveManager.instance != null)
+                WaveManager.instance.NotifyProjectileSpawned();
+
             // Instantiate the bebble
             Instantiate(bebblePrefab, transform.position, Quaternion.identity);
         }
@@ -163,11 +243,6 @@ public class BatEnemy : MonoBehaviour
         if (health <= 0)
         {
             isShaking = false;
-
-            if (Coin != null)
-                Instantiate(Coin, transform.position, Quaternion.identity);
-            if (ExpOrb != null)
-                Instantiate(ExpOrb, transform.position, Quaternion.identity);
 
             if (isBoss && Key3 != null)
             {

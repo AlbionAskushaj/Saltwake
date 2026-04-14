@@ -5,8 +5,6 @@ MonoImporter:
   serializedVersion: 2
   defaultReferences:
   - bebblePrefab: {instanceID: 0}
-  - Coin: {fileID: 521765184447325252, guid: db31ad3a3b2694fd8b4654a11a38bd3b, type: 3}
-  - ExpOrb: {fileID: 3957199662375456283, guid: bfad4dba24e704d1e90afd5415a78af1, type: 3}
   - Key3: {fileID: 2012280631279362087, guid: 5e17d91803f5d4a94a479aec86db7ea6, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
