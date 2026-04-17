@@ -95,7 +95,14 @@ public class RoomManager : MonoBehaviour
 
         playerInside = true;
 
-        if (roomCleared) return;
+        // Rooms with no enemies (and no boss) never run ActivateRoom, but we still
+        // want their entry dialogue to fire the first time the player walks in.
+        if (roomCleared)
+        {
+            if (!string.IsNullOrEmpty(roomEntryDialogue))
+                DialogueBox.Show(roomEntryDialogue, entryDialogueDuration);
+            return;
+        }
 
         StartCoroutine(ActivateRoom());
     }
@@ -113,17 +120,17 @@ public class RoomManager : MonoBehaviour
             exitGate.Close();
 
         if (isBossRoom && bossPrefab != null && spawnedBoss == null)
-        {
             SpawnBoss();
-            DialogueBox.Show("The Stormcrow descends...", 3f);
-        }
-        else if (isBossRoom && spawnedBoss != null)
-        {
-            DialogueBox.Show("The Stormcrow descends...", 3f);
-        }
-        else if (!string.IsNullOrEmpty(roomEntryDialogue))
+
+        // Prefer any level-specific roomEntryDialogue set in the inspector. Fall back
+        // to the legacy "Stormcrow descends" line only for boss rooms that didn't set one.
+        if (!string.IsNullOrEmpty(roomEntryDialogue))
         {
             DialogueBox.Show(roomEntryDialogue, entryDialogueDuration);
+        }
+        else if (isBossRoom)
+        {
+            DialogueBox.Show("The Stormcrow descends...", 3f);
         }
     }
 
