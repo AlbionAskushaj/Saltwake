@@ -2551,7 +2551,7 @@ MonoBehaviour:
   - {fileID: 958865375}
   currentWaveNumber: 0
   bossPrefab: {fileID: 990664307468291552, guid: aad0bd4a879a54e13833b1cd45a37ee8, type: 3}
-  nextLevelBuildIndex: 2
+  nextLevelBuildIndex: 3
   levelEntryCheckpoint: {fileID: 1999000201}
   waveCheckpointTransforms:
   - {fileID: 0}
